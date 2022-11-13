@@ -1,13 +1,13 @@
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.lang.reflect.Array;
 
-public class Basket {
+public class Basket implements Serializable {
     private String[] product = {"Молоко ", "Хлеб ", "Рис "};
     private int[] prices = {50, 14, 80};
     private int[] numbers = {1, 2, 3};
-
     private int[] sumProducts = new int[3];
     private int[] numberOfProduct = new int[3];
     private int priceOfGoods = 0;
@@ -39,34 +39,29 @@ public class Basket {
         System.out.println("Итого " + priceOfGoods + " руб");
     }
 
-    public void saveTxt(File textfile) throws IOException {
-        try (PrintWriter out = new PrintWriter(textfile);) {
-            for (int i = 0; i < numberOfProduct.length; i++) {
+    public void saveBin(File file) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+        for (int i = 0; i < numberOfProduct.length; i++) {
                 if (sumProducts[i] != 0) {
                     String s = numbers[i] + " " + product[i] + " " + sumProducts[i] + " штук, " + "цена " +
                             prices[i] + " руб/штука, " + "Всего " + (prices[i] * sumProducts[i]) + " руб";
-                    out.write(s + "\n");
+                    out.writeObject(s);
                 }
             }
-            out.write("Итого: ");
-            String result = priceOfGoods + " руб";
-            out.write(result + "\n");
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
+        out.close();
     }
-
-    public static Basket loadFromTxtFile(File textfile) throws IOException {
+    public static Basket loadFromBinFile(File file) throws IOException, ClassNotFoundException {
         Basket basket = new Basket();
-        try (InputStreamReader in = new InputStreamReader(new FileInputStream(textfile), StandardCharsets.UTF_8)) {
-            System.out.println("Считываем:");
-            while (in.ready()) {
-                char read = (char) in.read();
-                System.out.print(read);
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+        String d = (String) in.readObject();
+        try {
+            while (!d.equals(null)) {
+                System.out.println(d);
+                d = (String) in.readObject();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        in.close();
         return basket;
     }
 }
